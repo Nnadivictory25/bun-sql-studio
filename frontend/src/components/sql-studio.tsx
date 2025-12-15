@@ -73,6 +73,13 @@ export const SqlStudio = () => {
 		store.setState((state) => ({ ...state, currentQuery: sql }));
 	};
 
+	const handleHistoryDelete = (sql: string) => {
+		store.setState((state) => ({
+			...state,
+			queryHistory: state.queryHistory.filter((h) => h !== sql),
+		}));
+	};
+
 	return (
 		<div className='h-full flex flex-col gap-2 overflow-hidden'>
 			<div className='flex items-center justify-between px-2 shrink-0'>
@@ -95,6 +102,7 @@ export const SqlStudio = () => {
 						<QueryHistory
 							history={queryHistory}
 							onSelect={handleHistorySelect}
+							onDelete={handleHistoryDelete}
 						/>
 					</div>
 				</div>

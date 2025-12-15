@@ -6,6 +6,7 @@ import {
 	flexRender,
 	type ColumnDef,
 } from '@tanstack/react-table';
+import JsonViewer from './json-viewer';
 
 type Row = Record<string, unknown>;
 
@@ -277,7 +278,6 @@ export const DataTable = ({
 
 				{headerSlot && <div>{headerSlot}</div>}
 			</div>
-
 			<div className='flex-1 overflow-auto'>
 				<table className='table table-zebra table-sm w-full table-fixed'>
 					<thead className='sticky top-0 z-10 bg-base-200'>
@@ -319,13 +319,11 @@ export const DataTable = ({
 					</tbody>
 				</table>
 			</div>
-
 			{/* Pagination Controls */}
 			<div className='flex justify-center items-center p-4 bg-base-200 border-t border-base-300 shrink-0'>
 				<PaginationControls table={table} totalRows={totalRows} limit={limit} />
 			</div>
-
-			{/* Custom Popover for Text Preview */}
+			// Custom Popover for Text Preview
 			{activePopover && (
 				<>
 					{/* Backdrop to close */}
@@ -346,15 +344,14 @@ export const DataTable = ({
 					</div>
 				</>
 			)}
-
 			{/* JSON MODAL */}
 			<dialog id='json_modal' className='modal'>
 				<div className='modal-box max-w-4xl'>
 					<h3 className='font-bold text-lg'>JSON Data</h3>
 					<div className='py-4'>
-						<pre className='bg-base-200 p-4 rounded text-sm overflow-auto max-h-96'>
-							{jsonModalData ? JSON.stringify(jsonModalData, null, 2) : ''}
-						</pre>
+						<div className='border border-base-300 rounded overflow-hidden min-h-[100px] relative bg-base-300'>
+							<JsonViewer value={jsonModalData} />
+						</div>
 					</div>
 					<div className='modal-action'>
 						<button

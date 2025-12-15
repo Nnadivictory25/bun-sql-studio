@@ -69,9 +69,9 @@ bun-sql-studio
 
 ## Requirements
 
-- Bun runtime (required for SQLite support)
+- Bun runtime (required for execution and SQLite support)
 - SQLite database file
-- Node.js 18+ (for CLI execution)
+- Node.js 18+ (for NPM installation, or use Bun's package manager)
 
 ## Troubleshooting
 

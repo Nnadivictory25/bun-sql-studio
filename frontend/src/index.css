@@ -1,0 +1,21 @@
+@import 'tailwindcss';
+@plugin "daisyui" {
+	themes:
+		light --default,
+		dark --prefersdark;
+	root: ':root';
+	include:;
+	exclude:;
+	prefix:;
+	logs: true;
+}
+
+:root {
+	--color-primary: #fff;
+	--color-primary-content: #000;
+	--radius-box: 1rem;
+}
+
+.sidebar {
+	@apply fixed top-0 left-0 h-full w-64 bg-base-100 border-r border-base-200 p-5 border-r-gray-500;
+}

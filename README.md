@@ -1,34 +1,47 @@
 # Bun SQL Studio
 
-A modern SQL database interface specifically built for Bun runtime. Browse SQLite tables, run queries, and inspect JSON data using Bun's native SQLite (for now).
-
-## Installation
-
-```bash
-bun install -g bun-sql-studio
-# Requires Bun runtime for optimal performance
-```
+A modern Bun SQL database studio specifically built for Bun runtime. Browse SQLite tables, run queries, and inspect JSON data using Bun's native SQLite (for now).
 
 ## Quick Start
 
-1. Create `bun-sql-studio.json` in your project directory:
+1. Create configuration file:
 
-```json
-{
-	"dialect": "sqlite",
-	"dbUrl": "./database.sqlite",
-	"port": 4987
-}
+```bash
+echo '{
+  "dialect": "sqlite",
+  "dbUrl": "./database.sqlite",
+  "port": 4987
+}' > bun-sql-studio.json
 ```
 
 2. Run the studio:
 
 ```bash
-bun-sql-studio
-# Uses Bun runtime for fast startup and SQLite operations
+bunx bun-sql-studio
 ```
 
-3. Open `http://localhost:4987` in your browser.
+The studio will start at `http://localhost:4987`.
+
+### Configuration
+
+The `bun-sql-studio.json` file is required and must be in your current directory:
+
+```json
+{
+  "dialect": "sqlite",
+  "dbUrl": "./database.sqlite",
+  "port": 4987
+}
+```
+
+### Alternative: Global Installation
+
+If you prefer not to use `bunx`:
+
+```bash
+npm install -g bun-sql-studio
+bun-sql-studio  # Run locally (still needs config file)
+```
 
 ## Features
 

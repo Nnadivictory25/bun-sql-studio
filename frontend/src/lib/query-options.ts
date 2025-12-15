@@ -12,12 +12,17 @@ export const tablesQueryOptions = queryOptions({
     queryFn: () => api.getTables(),
 })
 
+export const schemaQueryOptions = queryOptions({
+    queryKey: ['schema'],
+    queryFn: () => api.getSchema(),
+})
+
 export const tableDataQueryOptions = ({
     table,
     limit = 100,
     offset = 0,
 }: TableDataQueryOptions) => queryOptions({
-    queryKey: ['tableData', table],
+    queryKey: ['tableData', table, limit, offset],
     queryFn: () => api.getTableData({ table, limit, offset }),
 })
 

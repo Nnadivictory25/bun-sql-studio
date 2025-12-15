@@ -1,11 +1,14 @@
 const IS_DEV = import.meta.env.DEV;
-const ENDPOINT = IS_DEV ? "http://localhost:4987" : "https://api.example.com"; //TODO: Change to actual endpoint
+const ENDPOINT = IS_DEV ? "http://localhost:4987" : ""; // Relative URLs for production
 
 export const api = {
   getTables: (): Promise<TablesResponse> =>
     fetch(`${ENDPOINT}/tables`).then(res => res.json()),
 
-  getTableData: ({
+  getSchema: (): Promise<SchemaResponse> =>
+    fetch(`${ENDPOINT}/schema`).then(res => res.json()),
+
+  getTableData: async ({
     table,
     limit,
     offset
@@ -13,14 +16,25 @@ export const api = {
     table: string;
     limit: number;
     offset: number;
-  }): Promise<TableDataResponse> =>
-    fetch(`${ENDPOINT}/table-data?table=${table}&limit=${limit}&offset=${offset}`)
-      .then(res => res.json()),
+  }): Promise<TableDataResponse> => {
+    const res = await fetch(`${ENDPOINT}/table-data?table=${table}&limit=${limit}&offset=${offset}`);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch table data');
+    }
+    return data;
+  },
 
-  runQuery: (sql: string): Promise<QueryResponse> =>
-    fetch(`${ENDPOINT}/query`, {
+  runQuery: async (sql: string): Promise<QueryResponse> => {
+    const res = await fetch(`${ENDPOINT}/query`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sql })
-    }).then(res => res.json()),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to run query');
+    }
+    return data;
+  },
 };

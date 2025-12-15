@@ -1,0 +1,41 @@
+{
+    "name": "bun-sql-studio",
+    "version": "0.1.0",
+    "description": "Modern Bun SQL database studio",
+    "main": "dist/cli.js",
+    "type": "module",
+    "bin": {
+        "bun-sql-studio": "dist/cli.js"
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "bash scripts/build.sh",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "sql",
+        "database",
+        "sqlite",
+        "bun",
+        "studio",
+        "query",
+        "interface"
+    ],
+    "engines": {
+        "node": ">=18.0.0",
+        "bun": ">=1.3.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Nnadivictory25/bun-sql-studio.git"
+    },
+    "author": "Nnadi Victory",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Nnadivictory25/bun-sql-studio/issues"
+    },
+    "homepage": "https://github.com/Nnadivictory25/bun-sql-studio#readme"
+}

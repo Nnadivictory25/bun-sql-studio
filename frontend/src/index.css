@@ -17,5 +17,5 @@
 }
 
 .sidebar {
-	@apply fixed top-0 left-0 h-full w-64 bg-base-100 border-r border-base-200 p-5 border-r-gray-500;
+	@apply h-full w-64 bg-base-100 border-r border-base-200 p-5 border-r-gray-500 flex-shrink-0;
 }

@@ -1,0 +1,5 @@
+{
+  "dialect": "sqlite",
+  "dbUrl": "./db.sqlite",
+  "port": 4987
+}

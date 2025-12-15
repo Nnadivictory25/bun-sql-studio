@@ -4,15 +4,16 @@ import path from "path";
 import { getSchema, getTables, getTableData, withCors } from "./utils";
 
 // Paths
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const TOOL_ROOT = path.resolve(import.meta.dir, "..");
 const DB_URL = process.env.DB_URL;
 const PORT = process.env.PORT || 4987;
+const FRONTEND_DIST_PATH = path.join(__dirname, "frontend");
 
 if (!DB_URL) {
     throw new Error("DB_URL is not set");
 }
 
-const FRONTEND_ROOT = path.join(TOOL_ROOT, "frontend/dist");
 
 const db = new Database(DB_URL);
 
@@ -81,12 +82,12 @@ const server = serve({
         }
 
         // Serve frontend files
-        let filePath = path.join(FRONTEND_ROOT, url.pathname);
+        let filePath = path.join(FRONTEND_DIST_PATH, url.pathname);
         const fileExists = await Bun.file(filePath).exists();
         if (fileExists) {
             return withCors(new Response(Bun.file(filePath)));
         } else {
-            return withCors(new Response(Bun.file(path.join(FRONTEND_ROOT, "index.html"))));
+            return withCors(new Response(Bun.file(path.join(FRONTEND_DIST_PATH, "index.html"))));
         }
     },
 });

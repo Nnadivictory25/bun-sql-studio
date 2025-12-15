@@ -24,18 +24,21 @@ The studio will start at `http://localhost:4987`.
 
 ### Configuration
 
-The `bun-sql-studio.json` file is required and must be in your current directory:
+The studio automatically detects your database settings from:
+- **Drizzle config** (`drizzle.config.ts` or `drizzle.config.js`) - zero-config for existing projects
+- **Studio config** (`bun-sql-studio.json`) - create this only if no Drizzle config exists
 
 ```json
 {
-	"dialect": "sqlite",
-	"dbUrl": "./database.sqlite",
-	"port": 4987
+  "dialect": "sqlite",
+  "dbUrl": "./database.sqlite",
+  "port": 4987
 }
 ```
 
 ## Features
 
+- **Zero-Config**: Auto-detects Drizzle config for instant setup
 - **Table Browser**: View all tables with column information
 - **Query Runner**: Execute SELECT queries with results table
 - **JSON Viewer**: Inspect JSON columns with expandable modal

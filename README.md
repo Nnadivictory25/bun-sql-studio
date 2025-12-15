@@ -29,23 +29,24 @@ Create `bun-sql-studio.json` for custom settings:
 
 ```json
 {
-  "dialect": "sqlite",
-  "dbUrl": "./database.sqlite",
-  "port": 4987
+	"dialect": "sqlite",
+	"dbUrl": "./database.sqlite",
+	"port": 4987
 }
 ```
 
 ### Configuration
 
 The studio automatically detects your database settings from:
+
 - **Drizzle config** (`drizzle.config.ts` or `drizzle.config.js`) - zero-config for existing projects
 - **Studio config** (`bun-sql-studio.json`) - create this only if no Drizzle config exists
 
 ```json
 {
-  "dialect": "sqlite",
-  "dbUrl": "./database.sqlite",
-  "port": 4987
+	"dialect": "sqlite",
+	"dbUrl": "./database.sqlite",
+	"port": 4987
 }
 ```
 

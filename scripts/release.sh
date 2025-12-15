@@ -11,8 +11,8 @@ if [ -n "$(git status --porcelain)" ]; then
     echo ""
 
     # Prompt for commit message
-    echo "Enter commit message:"
-    read -r commit_message
+    echo "Enter commit message (press Ctrl+D when done):"
+    commit_message=$(cat)
 
     if [ -z "$commit_message" ]; then
         echo "❌ Commit message cannot be empty"

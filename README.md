@@ -28,9 +28,9 @@ The `bun-sql-studio.json` file is required and must be in your current directory
 
 ```json
 {
-  "dialect": "sqlite",
-  "dbUrl": "./database.sqlite",
-  "port": 4987
+	"dialect": "sqlite",
+	"dbUrl": "./database.sqlite",
+	"port": 4987
 }
 ```
 
@@ -60,31 +60,9 @@ bun-sql-studio  # Run locally (still needs config file)
 | `dbUrl`   | string | required | Path to SQLite database file        |
 | `port`    | number | 4987     | Server port                         |
 
-## Usage
-
-### Table Browsing
-
-- Click table names in the sidebar
-- View column types and nullability
-- Browse data with pagination
-
-### Running Queries
-
-- Use the query interface (coming in v0.2.0)
-- Execute read-only SELECT statements
-- View results in sortable table
-
-### JSON Data
-
-- JSON columns display truncated preview
-- Click "See More" for full JSON in modal
-- Copy formatted JSON to clipboard
-
 ## Requirements
 
-- Bun runtime (required for execution and SQLite support)
-- SQLite database file
-- Node.js 18+ (for NPM installation, or use Bun's package manager)
+- Bun 👍
 
 ## Troubleshooting
 

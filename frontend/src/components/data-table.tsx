@@ -315,12 +315,14 @@ export const DataTable = ({
 					/>
 					{/* The Popover */}
 					<div
-						className='fixed z-50 bg-base-100 shadow-xl border border-base-300 rounded p-4 text-sm max-w-md overflow-auto max-h-80 break-words whitespace-pre-wrap'
+						className='fixed z-50 bg-base-100 shadow-xl border border-base-300 rounded p-2 text-sm max-w-md overflow-auto max-h-80'
 						style={{
 							top: activePopover.rect.bottom + 5,
-							left: Math.min(activePopover.rect.left, window.innerWidth - 320), // Prevent going off-screen to the right roughly
+							left: Math.min(activePopover.rect.left, window.innerWidth - 320),
 						}}>
-						{activePopover.content}
+						<pre className='whitespace-pre-wrap break-words font-mono text-xs bg-base-200 p-2 rounded'>
+							{activePopover.content}
+						</pre>
 					</div>
 				</>
 			)}

@@ -237,6 +237,9 @@ export const DataTable = ({
 			size: 100,
 			minSize: 50,
 			maxSize: 500,
+			meta: {
+				isJson: key.toLowerCase().includes('json'),
+			},
 			// cell is handled by defaultColumn
 		}));
 	}, [customColumns, data]);
@@ -323,7 +326,7 @@ export const DataTable = ({
 			<div className='flex justify-center items-center p-4 bg-base-200 border-t border-base-300 shrink-0'>
 				<PaginationControls table={table} totalRows={totalRows} limit={limit} />
 			</div>
-			// Custom Popover for Text Preview
+			{/* Custom Popover for Text Preview */}
 			{activePopover && (
 				<>
 					{/* Backdrop to close */}

@@ -97,12 +97,18 @@ export const DataTable = ({
 				parsed = JSON.parse(value);
 			} catch {
 				// Failed parsing, treat as long text
-				const maxLength = 60;
+				const maxLength = 28;
 				if (value.length <= maxLength)
-					return <span className='truncate'>{value}</span>;
+					return (
+						<span className='truncate' title={value}>
+							{value}
+						</span>
+					);
 				return (
 					<div className='flex items-center gap-2'>
-						<span className='truncate'>{value.substring(0, maxLength)}...</span>
+						<span className='truncate' title={value}>
+							{value.substring(0, maxLength)}...
+						</span>
 						<button
 							className='btn btn-xs btn-ghost text-primary no-animation h-auto min-h-0 py-1'
 							onClick={(e) => onShowPopover(e, value)}>
@@ -124,7 +130,11 @@ export const DataTable = ({
 			);
 		}
 
-		return <span className='truncate'>{String(value)}</span>;
+		return (
+			<span className='truncate' title={String(value)}>
+				{String(value)}
+			</span>
+		);
 	};
 
 	// Custom cell for long text
@@ -135,13 +145,19 @@ export const DataTable = ({
 		value: string;
 		onShowPopover: (e: React.MouseEvent, content: string) => void;
 	}) => {
-		const maxLength = 60;
+		const maxLength = 28;
 		if (value.length <= maxLength)
-			return <span className='truncate'>{value}</span>;
+			return (
+				<span className='truncate' title={value}>
+					{value}
+				</span>
+			);
 
 		return (
 			<div className='flex items-center gap-2'>
-				<span className='truncate'>{value.substring(0, maxLength)}...</span>
+				<span className='truncate' title={value}>
+					{value.substring(0, maxLength)}...
+				</span>
 				<button
 					className='btn btn-xs btn-ghost text-primary no-animation h-auto min-h-0 py-1'
 					onClick={(e) => onShowPopover(e, value)}>
@@ -190,11 +206,15 @@ export const DataTable = ({
 			}
 
 			// Handle Long Text
-			if (typeof value === 'string' && value.length > 60) {
+			if (typeof value === 'string' && value.length > 28) {
 				return <TextCell value={value} onShowPopover={handleShowPopover} />;
 			}
 
-			return <span className='truncate'>{String(value)}</span>;
+			return (
+				<span className='truncate' title={String(value)}>
+					{String(value)}
+				</span>
+			);
 		},
 	};
 

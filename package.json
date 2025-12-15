@@ -1,6 +1,6 @@
 {
     "name": "bun-sql-studio",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "description": "Modern Bun SQL database studio",
     "main": "dist/cli.js",
     "type": "module",

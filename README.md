@@ -34,15 +34,6 @@ The `bun-sql-studio.json` file is required and must be in your current directory
 }
 ```
 
-### Alternative: Global Installation
-
-If you prefer not to use `bunx`:
-
-```bash
-npm install -g bun-sql-studio
-bun-sql-studio  # Run locally (still needs config file)
-```
-
 ## Features
 
 - **Table Browser**: View all tables with column information

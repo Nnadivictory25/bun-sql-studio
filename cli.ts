@@ -7,11 +7,23 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Config loading with Drizzle fallback
+// Config loading with studio config priority
 async function loadConfig() {
   const cwd = process.cwd();
 
-  // Try Drizzle config first
+  // Try studio config first
+  const studioConfigPath = path.join(cwd, "bun-sql-studio.json");
+  if (fs.existsSync(studioConfigPath)) {
+    const config = JSON.parse(fs.readFileSync(studioConfigPath, "utf-8"));
+    console.log("✅ Using bun-sql-studio.json config");
+    return {
+      dialect: config.dialect || "sqlite",
+      dbUrl: config.dbUrl,
+      port: config.port || 4987
+    };
+  }
+
+  // Fallback to Drizzle config
   const drizzleTsPath = path.join(cwd, "drizzle.config.ts");
   const drizzleJsPath = path.join(cwd, "drizzle.config.js");
 
@@ -20,10 +32,9 @@ async function loadConfig() {
   // Try TypeScript config first
   if (fs.existsSync(drizzleTsPath)) {
     try {
-      // Bun can handle TypeScript imports
       const module = await import(drizzleTsPath);
       drizzleConfig = module.default || module;
-      console.log("✅ Found TypeScript Drizzle config, using database settings from there");
+      console.log("✅ Found TypeScript Drizzle config, using as fallback");
     } catch (e: any) {
       console.log("⚠️  Could not read TypeScript Drizzle config:", e.message);
     }
@@ -34,7 +45,7 @@ async function loadConfig() {
     try {
       const module = await import(drizzleJsPath);
       drizzleConfig = module.default || module;
-      console.log("✅ Found JavaScript Drizzle config, using database settings from there");
+      console.log("✅ Found JavaScript Drizzle config, using as fallback");
     } catch (e) {
       console.log("⚠️  Could not read JavaScript Drizzle config");
     }
@@ -49,20 +60,10 @@ async function loadConfig() {
     };
   }
 
-  // Fallback to bun-sql-studio.json
-  const studioConfigPath = path.join(cwd, "bun-sql-studio.json");
-  if (!fs.existsSync(studioConfigPath)) {
-    console.error("❌ No Drizzle config found and bun-sql-studio.json not found");
-    console.error("   Create bun-sql-studio.json or set up a Drizzle config");
-    process.exit(1);
-  }
-
-  const config = JSON.parse(fs.readFileSync(studioConfigPath, "utf-8"));
-  return {
-    dialect: config.dialect || "sqlite",
-    dbUrl: config.dbUrl,
-    port: config.port || 4987
-  };
+  // No config found
+  console.error("❌ No configuration found");
+  console.error("   Create bun-sql-studio.json or set up a Drizzle config");
+  process.exit(1);
 }
 
 const config = await loadConfig();

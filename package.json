@@ -13,7 +13,9 @@
     ],
     "scripts": {
         "build": "bash scripts/build.sh",
-        "prepublishOnly": "npm run build"
+        "release": "bash scripts/release.sh",
+        "prepublishOnly": "npm run build",
+        "size": "npm run build && du -sh dist/ && echo 'Assets:' && ls -lah dist/assets/"
     },
     "keywords": [
         "sql",

@@ -69,33 +69,35 @@ export function TableView() {
 		})
 	);
 
-	const [jsonPreview, setJsonPreview] = useState<unknown | null>(null);
+	const [jsonModalData, setJsonModalData] = useState<unknown | null>(null);
 
-	// Custom cell for JSON columns
-	const JsonCell = ({ getValue }: any) => {
-		const value = getValue();
-
-		if (!value) return null;
-
-		try {
-			const parsed = JSON.parse(value);
-			const truncated = truncateJson(JSON.stringify(parsed));
-
-			return (
-				<div className='flex items-center gap-2'>
-					<span className='truncate'>{truncated}</span>
-					<button
-						className='btn btn-xs btn-outline btn-info'
-						onClick={() => setJsonPreview(parsed)}>
-						View JSON
-					</button>
-				</div>
-			);
-		} catch {
-			// If not valid JSON, display as string
-			return <span className='truncate'>{truncateJson(value)}</span>;
-		}
+	const showJsonModal = (data: unknown) => {
+		setJsonModalData(data);
+		(document.getElementById('json_modal') as HTMLDialogElement)?.showModal();
 	};
+
+// Custom cell for JSON columns
+const JsonCell = ({ getValue, onShowModal }: { getValue: any; onShowModal: (data: any) => void }) => {
+  const value = getValue();
+
+  if (!value) return null;
+
+  try {
+    const parsed = JSON.parse(value);
+
+    return (
+      <button
+        className="btn btn-xs btn-outline btn-info"
+        onClick={() => onShowModal(parsed)}
+      >
+        View JSON
+      </button>
+    );
+  } catch {
+    // If not valid JSON, display as string
+    return <span className="truncate">{truncateJson(value)}</span>;
+  }
+};
 
 	const columns = React.useMemo<ColumnDef<Row>[]>(() => {
 		if (!data?.columns) return [];
@@ -107,7 +109,7 @@ export function TableView() {
 			minSize: 50,
 			maxSize: 500,
 			cell: col.type.toLowerCase().includes('json')
-				? (info) => <JsonCell getValue={info.getValue} />
+				? (info) => <JsonCell getValue={info.getValue} onShowModal={showJsonModal} />
 				: (info) => <span>{String(info.getValue())}</span>,
 		}));
 	}, [data?.columns]);
@@ -140,8 +142,8 @@ export function TableView() {
 
 	return (
 		<div className='border border-base-300 rounded-lg overflow-hidden'>
-			{/* Table Details with Pagination */}
-			<div className='flex justify-between items-center p-4 bg-base-200 border-b border-base-300'>
+			{/* Table Details */}
+			<div className='p-4 bg-base-200 border-b border-base-300'>
 				<span className='text-sm'>
 					Showing {table.getState().pagination.pageIndex * limit + 1}-
 					{Math.min(
@@ -150,11 +152,6 @@ export function TableView() {
 					)}{' '}
 					of {data?.totalRows || 0} rows
 				</span>
-				<PaginationControls
-					table={table}
-					totalRows={data?.totalRows}
-					limit={limit}
-				/>
 			</div>
 
 			<div className='overflow-auto max-h-[60vh]'>
@@ -199,51 +196,39 @@ export function TableView() {
 				</table>
 			</div>
 
-			{/* JSON MODAL */}
-			{jsonPreview !== null && (
-				<JsonModal value={jsonPreview} onClose={() => setJsonPreview(null)} />
-			)}
-		</div>
-	);
-}
-
-function JsonModal({
-	value,
-	onClose,
-}: {
-	value: unknown;
-	onClose: () => void;
-}) {
-	const [copied, setCopied] = useState(false);
-
-	const handleCopy = async () => {
-		try {
-			await navigator.clipboard.writeText(JSON.stringify(value, null, 2));
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		} catch (err) {
-			console.error('Failed to copy:', err);
-		}
-	};
-
-	return (
-		<div className='modal modal-open'>
-			<div className='modal-box max-w-4xl'>
-				<h3 className='font-bold text-lg'>JSON Data</h3>
-				<div className='py-4'>
-					<pre className='bg-base-200 p-4 rounded text-sm overflow-auto max-h-96'>
-						{JSON.stringify(value, null, 2)}
-					</pre>
-				</div>
-				<div className='modal-action'>
-					<button className='btn btn-ghost' onClick={handleCopy}>
-						{copied ? 'Copied!' : 'Copy'}
-					</button>
-					<button className='btn' onClick={onClose}>
-						Close
-					</button>
-				</div>
+			{/* Pagination Controls */}
+			<div className='flex justify-center items-center p-4 bg-base-200 border-t border-base-300'>
+				<PaginationControls
+					table={table}
+					totalRows={data?.totalRows}
+					limit={limit}
+				/>
 			</div>
+
+			{/* JSON MODAL */}
+			<dialog id="json_modal" className="modal">
+				<div className="modal-box max-w-4xl">
+					<h3 className="font-bold text-lg">JSON Data</h3>
+					<div className="py-4">
+						<pre className="bg-base-200 p-4 rounded text-sm overflow-auto max-h-96">
+							{jsonModalData ? JSON.stringify(jsonModalData, null, 2) : ''}
+						</pre>
+					</div>
+					<div className="modal-action">
+						<button className="btn btn-outline" onClick={() => navigator.clipboard.writeText(JSON.stringify(jsonModalData, null, 2))}>
+							Copy
+						</button>
+						<form method="dialog">
+							<button className="btn">Close</button>
+						</form>
+					</div>
+				</div>
+				<form method="dialog" className="modal-backdrop">
+					<button>close</button>
+				</form>
+			</dialog>
 		</div>
 	);
 }
+
+

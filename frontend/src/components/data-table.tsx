@@ -9,12 +9,6 @@ import {
 
 type Row = Record<string, unknown>;
 
-// Helper to truncate JSON string
-const truncateJson = (jsonString: string, maxLength: number = 100) => {
-	if (jsonString.length <= maxLength) return jsonString;
-	return jsonString.substring(0, maxLength) + '...';
-};
-
 interface PaginationControlsProps {
 	table: any;
 	totalRows?: number;
@@ -89,9 +83,11 @@ export const DataTable = ({
 	const JsonCell = ({
 		value,
 		onShowModal,
+		onShowPopover,
 	}: {
 		value: any;
 		onShowModal: (data: any) => void;
+		onShowPopover: (e: React.MouseEvent, content: string) => void;
 	}) => {
 		if (!value) return null;
 
@@ -100,7 +96,20 @@ export const DataTable = ({
 			try {
 				parsed = JSON.parse(value);
 			} catch {
-				return <span className='truncate'>{truncateJson(value)}</span>;
+				// Failed parsing, treat as long text
+				const maxLength = 60;
+				if (value.length <= maxLength)
+					return <span className='truncate'>{value}</span>;
+				return (
+					<div className='flex items-center gap-2'>
+						<span className='truncate'>{value.substring(0, maxLength)}...</span>
+						<button
+							className='btn btn-xs btn-ghost text-primary no-animation h-auto min-h-0 py-1'
+							onClick={(e) => onShowPopover(e, value)}>
+							View
+						</button>
+					</div>
+				);
 			}
 		}
 
@@ -134,9 +143,9 @@ export const DataTable = ({
 			<div className='flex items-center gap-2'>
 				<span className='truncate'>{value.substring(0, maxLength)}...</span>
 				<button
-					className='btn btn-xs btn-ghost btn-square'
+					className='btn btn-xs btn-ghost text-primary no-animation h-auto min-h-0 py-1'
 					onClick={(e) => onShowPopover(e, value)}>
-					<span className='text-xs'>👁️</span>
+					View
 				</button>
 			</div>
 		);
@@ -171,7 +180,13 @@ export const DataTable = ({
 				(typeof value === 'object' && value !== null) ||
 				isLikeJson
 			) {
-				return <JsonCell value={value} onShowModal={showJsonModal} />;
+				return (
+					<JsonCell
+						value={value}
+						onShowModal={showJsonModal}
+						onShowPopover={handleShowPopover}
+					/>
+				);
 			}
 
 			// Handle Long Text

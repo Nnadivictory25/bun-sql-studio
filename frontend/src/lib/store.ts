@@ -10,28 +10,20 @@ type StoreData = {
 
 // Load initial state from localStorage
 const loadFromStorage = (): Partial<StoreData> => {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-    } catch {
-        return {};
-    }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
 };
 
 // Save state to localStorage
 const saveToStorage = (state: StoreData) => {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-        console.warn('Failed to save to localStorage:', error);
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 };
 
 export const store = new Store<StoreData>({
     currentTable: null,
     queryHistory: [],
     currentQuery: null,
-    ...loadFromStorage(), // Merge with stored data
+    ...loadFromStorage(),
 });
 
 // Subscribe to changes and save

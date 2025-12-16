@@ -1,6 +1,6 @@
 # Bun SQL Studio v1.0 🎉
 
-**A modern, zero-config SQL database IDE for Bun**
+**A modern, zero-config SQL database studio for Bun**
 
 Bun SQL Studio is a fast, professional database interface for **SQLite, PostgreSQL, and MySQL**. It lets you browse tables, run queries, and inspect data with minimal setup—designed for developers who want tooling that _just works_.
 

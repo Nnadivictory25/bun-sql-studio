@@ -59,7 +59,7 @@ export const Sidebar = () => {
 					onClick={openSqlStudio}
 					className='flex items-center space-x-3 px-3 py-2 rounded-md transition-all duration-200 bg-white text-slate-950 hover:bg-slate-100 shadow-sm font-semibold cursor-pointer'>
 					<Code2 size={18} className='text-indigo-600' />
-					<span className='text-sm'>SQL Studio</span>
+					<span className='text-sm'>SQL Studio Editor</span>
 				</button>
 			</div>
 

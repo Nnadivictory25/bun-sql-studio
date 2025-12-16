@@ -54,6 +54,16 @@ http://localhost:4987
 
 ---
 
+## How it looks
+
+![Bun SQL Studio - Main Interface](./images/bun-sql-studio-full.jpeg)
+
+![Bun SQL Studio](./images/bunsql-studio-studio.jpeg)
+
+![JSON Data Viewer](./images/bun-sql-studio-json.png)
+
+![PostgreSQL View](./images/postgress-view.png)
+
 ## Configuration
 
 ### `bun-sql-studio.json`

@@ -65,3 +65,4 @@ jspm_packages/
 .yarn-integrity
 dist/
 plan.md
+AGENTS.md

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
 	useReactTable,
 	getCoreRowModel,
@@ -21,138 +21,71 @@ import JsonViewer from './json-viewer';
 
 type Row = Record<string, unknown>;
 
-const CellPopover = ({
-	rect,
-	content,
-	onClose,
-}: {
-	rect: DOMRect;
-	content: string;
-	onClose: () => void;
-}) => {
-	useEffect(() => {
-		const handleScroll = () => onClose();
-		window.addEventListener('scroll', handleScroll, true);
-		window.addEventListener('resize', handleScroll);
-		return () => {
-			window.removeEventListener('scroll', handleScroll, true);
-			window.removeEventListener('resize', handleScroll);
-		};
-	}, [onClose]);
+// Props for CellFormatter - moved outside component
+interface CellFormatterProps {
+	value: unknown;
+	onShowJson: (content: unknown, title?: string) => void;
+}
 
-	const style: React.CSSProperties = {
-		top: rect.top,
-		left: rect.left,
-		minWidth: rect.width,
-		maxWidth: 'min(500px, 90vw)',
-		maxHeight: '300px',
-		// Ensure it stays on screen vertically
-		transform:
-			rect.bottom > window.innerHeight - 200 ? 'translateY(-100%)' : 'none',
-	};
-	// Adjust top if transforming up
-	if (style.transform === 'translateY(-100%)') {
-		style.top = rect.top; // Actually rect.top - height?
-		// Simple approach: standard fixed positioning.
-		// If complex positioning needed, use floating-ui.
-		// For now simple: Just top/left.
-		delete style.transform;
-	}
+// TruncatedCell - simplified: no DOM detection, show expand on cell hover
+const TruncatedCell = React.memo(({ text }: { text: string }) => {
+	const [showPopover, setShowPopover] = useState(false);
+	const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+
+	const handleShowPopover = useCallback((e: React.MouseEvent) => {
+		e.stopPropagation();
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		setPopoverPosition({
+			top: rect.bottom + 4,
+			left: Math.max(8, Math.min(rect.left, window.innerWidth - 320)),
+		});
+		setShowPopover(true);
+	}, []);
+
+	const handleClosePopover = useCallback(() => setShowPopover(false), []);
 
 	return (
 		<>
-			<div className='fixed inset-0 z-40 bg-transparent' onClick={onClose} />
-			<div
-				className='fixed z-50 bg-slate-900 border border-slate-700 shadow-xl rounded-md p-3 overflow-auto text-sm text-slate-300 whitespace-pre-wrap font-sans custom-scrollbar'
-				style={style}>
-				{content}
-			</div>
-		</>
-	);
-};
-
-const TruncatedCell = ({
-	text,
-	onExpand,
-}: {
-	text: string;
-	onExpand: (rect: DOMRect) => void;
-}) => {
-	const ref = useRef<HTMLSpanElement>(null);
-	const [isTruncated, setIsTruncated] = useState(false);
-
-	useLayoutEffect(() => {
-		if (ref.current) {
-			const { scrollWidth, clientWidth } = ref.current;
-			setIsTruncated(scrollWidth > clientWidth);
-		}
-	});
-
-	return (
-		<div className='flex items-center justify-between w-full group relative min-w-0'>
-			<span
-				ref={ref}
-				className='truncate min-w-0 flex-1 block text-slate-300 cursor-default'
-				title={text}>
-				{text}
-			</span>
-			{isTruncated && (
+			{/* Use named group/cell to avoid conflict with row's group class */}
+			<div className='flex items-center justify-between w-full group/cell relative min-w-0'>
+				<span
+					className='truncate min-w-0 flex-1 block text-slate-300 cursor-default'
+					title={text}>
+					{text}
+				</span>
+				{/* Only visible when hovering THIS cell specifically */}
 				<button
-					onClick={(e) => {
-						e.stopPropagation();
-						// Use parent rect for popover alignment so it covers the cell logic
-						const rect = e.currentTarget.parentElement?.getBoundingClientRect();
-						if (rect) onExpand(rect);
-					}}
-					className='shrink-0 ml-1 p-0.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded cursor-pointer'>
+					onClick={handleShowPopover}
+					className='shrink-0 ml-1 p-0.5 text-slate-500 hover:text-white hover:bg-slate-700 rounded cursor-pointer opacity-0 group-hover/cell:opacity-100 transition-opacity'>
 					<Maximize2 size={10} />
 				</button>
+			</div>
+
+			{/* Popover */}
+			{showPopover && (
+				<>
+					{/* Backdrop */}
+					<div className='fixed inset-0 z-40' onClick={handleClosePopover} />
+					{/* Popover Content */}
+					<div
+						className='fixed z-50 bg-slate-900 border border-slate-700 shadow-xl rounded-md p-3 overflow-auto text-sm text-slate-300 whitespace-pre-wrap font-sans custom-scrollbar max-w-xs sm:max-w-md'
+						style={{
+							top: popoverPosition.top,
+							left: popoverPosition.left,
+							maxHeight: '300px',
+						}}>
+						{text}
+					</div>
+				</>
 			)}
-		</div>
+		</>
 	);
-};
+});
 
-interface DataTableProps {
-	data: Row[];
-	columns?: ColumnDef<Row>[];
-	totalRows?: number;
-	limit?: number;
-	isLoading?: boolean;
-	headerSlot?: React.ReactNode;
-	onPaginationChange?: (updater: any) => void;
-	pagination?: { pageIndex: number; pageSize: number };
-}
-
-export const DataTable = ({
-	data,
-	columns: customColumns,
-	totalRows,
-	limit = 100,
-	isLoading,
-	headerSlot,
-	onPaginationChange,
-	pagination,
-}: DataTableProps) => {
-	// For JSON Modal
-	const [jsonModalData, setJsonModalData] = useState<{
-		title: string;
-		content: unknown;
-	} | null>(null);
-
-	// For Text Popover
-	const [popover, setPopover] = useState<{
-		rect: DOMRect;
-		content: string;
-	} | null>(null);
-
-	const showJsonModal = (content: unknown, title = 'JSON Data') => {
-		setJsonModalData({ content, title });
-		(
-			document.getElementById('json_preview_modal') as HTMLDialogElement
-		)?.showModal();
-	};
-
-	const CellFormatter = ({ value }: { value: any }) => {
+// CellFormatter moved OUTSIDE the component - critical for performance
+// This prevents React from treating it as a new component on every parent render
+const CellFormatter = React.memo(
+	({ value, onShowJson }: CellFormatterProps) => {
 		if (value === null || value === undefined) {
 			return <span className='text-slate-600 italic text-xs'>NULL</span>;
 		}
@@ -170,7 +103,7 @@ export const DataTable = ({
 		if (typeof value === 'object') {
 			return (
 				<button
-					onClick={() => showJsonModal(value, 'JSON Data')}
+					onClick={() => onShowJson(value, 'JSON Data')}
 					className='flex items-center space-x-1.5 text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-1 rounded transition-colors cursor-pointer'>
 					<FileJson size={12} />
 					<span>JSON</span>
@@ -182,22 +115,15 @@ export const DataTable = ({
 
 		// Heuristic to detect stringified JSON
 		const trimmed = strValue.trim();
-		if (
+		const isJsonLike =
 			trimmed.length > 0 &&
-			(trimmed.startsWith('{') || trimmed.startsWith('[')) &&
-			(trimmed.endsWith('}') || trimmed.endsWith(']'))
-		) {
+			((trimmed[0] === '{' && trimmed[trimmed.length - 1] === '}') ||
+				(trimmed[0] === '[' && trimmed[trimmed.length - 1] === ']'));
+
+		if (isJsonLike) {
 			return (
 				<button
-					onClick={(e) => {
-						try {
-							const parsed = JSON.parse(strValue);
-							showJsonModal(parsed, 'JSON Data');
-						} catch {
-							const rect = e.currentTarget.getBoundingClientRect();
-							setPopover({ rect, content: strValue });
-						}
-					}}
+					onClick={() => onShowJson(JSON.parse(strValue), 'JSON Data')}
 					className='flex items-center space-x-1.5 text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-1 rounded transition-colors cursor-pointer'>
 					<FileJson size={12} />
 					<span>JSON</span>
@@ -206,28 +132,95 @@ export const DataTable = ({
 		}
 
 		// Use TruncatedCell for text
-		return (
-			<TruncatedCell
-				text={strValue}
-				onExpand={(rect) => setPopover({ rect, content: strValue })}
-			/>
-		);
-	};
+		return <TruncatedCell text={strValue} />;
+	}
+);
 
-	const defaultColumn: Partial<ColumnDef<Row>> = {
-		cell: (info) => <CellFormatter value={info.getValue()} />,
-	};
+interface DataTableProps {
+	data: Row[];
+	columns?: ColumnDef<Row>[];
+	totalRows?: number;
+	limit?: number;
+	isLoading?: boolean;
+	isFetching?: boolean; // For blur overlay during pagination/table switch
+
+	headerSlot?: React.ReactNode;
+	onPaginationChange?: (updater: any) => void;
+	pagination?: { pageIndex: number; pageSize: number };
+}
+
+export const DataTable = ({
+	data,
+	columns: customColumns,
+	totalRows,
+	limit,
+	isLoading,
+	isFetching,
+	headerSlot,
+	onPaginationChange,
+	pagination,
+}: DataTableProps) => {
+	// For JSON Modal
+	const [jsonModalData, setJsonModalData] = useState<{
+		title: string;
+		content: unknown;
+	} | null>(null);
+
+	// Memoize to keep defaultColumn stable
+	const showJsonModal = useCallback((content: unknown, title = 'JSON Data') => {
+		setJsonModalData({ content, title });
+		(
+			document.getElementById('json_preview_modal') as HTMLDialogElement
+		)?.showModal();
+	}, []);
+
+	// Use the external CellFormatter - pass memoized showJsonModal
+	const defaultColumn: Partial<ColumnDef<Row>> = React.useMemo(
+		() => ({
+			cell: (info) => (
+				<CellFormatter value={info.getValue()} onShowJson={showJsonModal} />
+			),
+		}),
+		[showJsonModal]
+	);
 
 	const columns = React.useMemo<ColumnDef<Row>[]>(() => {
 		if (customColumns) return customColumns;
 		if (!data || data.length === 0) return [];
+
+		// Add selection column
+		const selectionColumn: ColumnDef<Row> = {
+			id: 'select',
+			header: ({ table }) => (
+				<input
+					type='checkbox'
+					checked={table.getIsAllRowsSelected()}
+					onChange={table.getToggleAllRowsSelectedHandler()}
+					className='checkbox checkbox-xs'
+				/>
+			),
+			cell: ({ row }) => (
+				<input
+					type='checkbox'
+					checked={row.getIsSelected()}
+					onChange={row.getToggleSelectedHandler()}
+					className='checkbox checkbox-xs'
+				/>
+			),
+			size: 50,
+			enableResizing: false,
+		};
+
 		const firstRow = data[0];
-		if (!firstRow) return [];
-		return Object.keys(firstRow).map((key) => ({
+		if (!firstRow) return [selectionColumn];
+
+		const dataColumns = Object.keys(firstRow).map((key) => ({
 			accessorKey: key,
 			header: key,
 			size: 150, // Default size
 		}));
+
+		return [selectionColumn, ...dataColumns];
 	}, [customColumns, data]);
 
 	const table = useReactTable({
@@ -238,9 +231,10 @@ export const DataTable = ({
 		getPaginationRowModel: getPaginationRowModel(),
 		enableColumnResizing: true,
 		columnResizeMode: 'onChange',
+		enableRowSelection: true,
 		manualPagination: !!onPaginationChange,
-		pageCount: totalRows ? Math.ceil(totalRows / limit) : undefined,
-		onPaginationChange: onPaginationChange,
+		pageCount: totalRows ? Math.ceil(totalRows / (limit || 100)) : undefined,
+		onPaginationChange,
 		state: pagination ? { pagination } : undefined,
 		initialState:
 			!pagination && !onPaginationChange
@@ -269,6 +263,7 @@ export const DataTable = ({
 	}
 
 	const { pageIndex, pageSize } = table.getState().pagination;
+
 	const pageCount = table.getPageCount();
 	const totalRowCount = totalRows || data.length;
 	const startRow = pageIndex * pageSize + 1;
@@ -284,11 +279,25 @@ export const DataTable = ({
 					</h3>
 					<p className='text-xs text-slate-500 mt-0.5'>
 						Showing {startRow}-{endRow} of {totalRowCount} rows
+						{table.getSelectedRowModel().rows.length > 0 && (
+							<span className='ml-2 text-indigo-400'>
+								• {table.getSelectedRowModel().rows.length} selected
+							</span>
+						)}
 					</p>
 				</div>
 
 				<div className='flex items-center gap-4'>
 					{headerSlot}
+
+					{/* Selection Actions */}
+					{table.getSelectedRowModel().rows.length > 0 && (
+						<button
+							onClick={() => table.resetRowSelection()}
+							className='px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition-colors'>
+							Clear Selection ({table.getSelectedRowModel().rows.length})
+						</button>
+					)}
 
 					{/* Pagination Controls */}
 					<div className='flex items-center space-x-4 bg-slate-900/50 p-1 rounded-lg border border-slate-800/50'>
@@ -298,9 +307,9 @@ export const DataTable = ({
 								value={pageSize}
 								onChange={(e) => table.setPageSize(Number(e.target.value))}
 								className='bg-transparent text-xs text-slate-300 focus:outline-none border-b border-slate-700 pb-0.5 cursor-pointer'>
-								{[10, 25, 50, 100, 500].map((pageSize) => (
-									<option key={pageSize} value={pageSize}>
-										{pageSize}
+								{[5, 10, 25, 50].map((size) => (
+									<option key={size} value={size}>
+										{size}
 									</option>
 								))}
 							</select>
@@ -343,8 +352,17 @@ export const DataTable = ({
 				</div>
 			</div>
 
-			{/* Table Area */}
-			<div className='flex-1 overflow-auto custom-scrollbar'>
+			{/* Table Area - relative for blur overlay positioning */}
+			<div className='flex-1 overflow-auto custom-scrollbar relative'>
+				{/* Blur overlay - only covers table, not toolbar */}
+				{isFetching && (
+					<div className='absolute inset-0 bg-slate-950/30 backdrop-blur-sm z-20 flex items-center justify-center'>
+						<div className='flex items-center space-x-2 bg-slate-900 px-4 py-2 rounded-lg border border-slate-700 shadow-lg'>
+							<span className='loading loading-spinner loading-sm text-indigo-400'></span>
+							<span className='text-sm text-slate-300'>Loading...</span>
+						</div>
+					</div>
+				)}
 				<table className='w-full border-collapse text-left text-sm table-fixed'>
 					<thead className='bg-slate-900 sticky top-0 z-10 shadow-sm shadow-black/40'>
 						{table.getHeaderGroups().map((hg) => (
@@ -378,7 +396,11 @@ export const DataTable = ({
 						{table.getRowModel().rows.map((row) => (
 							<tr
 								key={row.id}
-								className='hover:bg-slate-900/40 transition-colors group'>
+								className={`transition-colors group ${
+									row.getIsSelected()
+										? 'bg-indigo-500/10 border-l-4 border-l-indigo-500'
+										: 'hover:bg-slate-900/40'
+								}`}>
 								{row.getVisibleCells().map((cell) => (
 									<td
 										key={cell.id}
@@ -431,15 +453,6 @@ export const DataTable = ({
 					<button>close</button>
 				</form>
 			</dialog>
-
-			{/* TEXT POPOVER */}
-			{popover && (
-				<CellPopover
-					rect={popover.rect}
-					content={popover.content}
-					onClose={() => setPopover(null)}
-				/>
-			)}
 		</div>
 	);
 };

@@ -1,12 +1,12 @@
 import { serve } from "bun";
-import { Database } from "bun:sqlite";
 import path from "path";
 import { getSchema, getTables, getTableData, withCors } from "./utils";
+import { createAdapter, type DatabaseDialect } from "./adapters/index";
 
 // Paths
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const TOOL_ROOT = path.resolve(import.meta.dir, "..");
 const DB_URL = process.env.DB_URL;
+const DIALECT = process.env.DIALECT as DatabaseDialect;
 const PORT = process.env.PORT || 4987;
 const FRONTEND_DIST_PATH = path.join(__dirname, "frontend");
 
@@ -15,7 +15,11 @@ if (!DB_URL) {
 }
 
 
-const db = new Database(DB_URL);
+if (!DIALECT) {
+    throw new Error("DIALECT is not set");
+}
+
+const adapter = createAdapter({ dbUrl: DB_URL, dialect: DIALECT });
 
 // Bun server
 const server = serve({
@@ -28,10 +32,30 @@ const server = serve({
             return withCors(new Response(null, { status: 204 }));
         }
 
+        // Meta endpoint
+        if (url.pathname === '/meta') {
+            try {
+                const databaseName = await adapter.getDatabaseName();
+                return withCors(Response.json({ 
+                    dialect: DIALECT, 
+                    databaseName 
+                }));
+            } catch (error: any) {
+                console.error("Error getting metadata", error);
+                return withCors(Response.json({ error: error.message }, { status: 500 }));
+            }
+        }
+
         // Schema endpoint
         if (url.pathname === '/schema') {
             try {
-                const tablesWithColumns = await getSchema(db);
+                const tables = await adapter.getTables();
+                const tablesWithColumns = await Promise.all(
+                    tables.map(async (table) => ({
+                        name: table.name,
+                        columns: await adapter.getColumns(table.name)
+                    }))
+                );
                 return withCors(Response.json({ tables: tablesWithColumns }));
             } catch (error: any) {
                 console.error("Error getting schema", error);
@@ -46,8 +70,8 @@ const server = serve({
                 if (!/^\s*(select|pragma|with)\s/i.test(sql)) {
                     return withCors(new Response("Read-only queries only", { status: 403 }));
                 }
-                const rows = db.prepare(sql).all();
-                return withCors(Response.json({ rows }));
+                const result = await adapter.executeQuery(sql);
+                return withCors(Response.json({ rows: result.rows }));
             } catch (error: any) {
                 return withCors(Response.json({ error: error.message }, { status: 500 }));
             }
@@ -56,7 +80,7 @@ const server = serve({
         // Tables endpoint
         if (url.pathname === '/tables') {
             try {
-                const tables = getTables(db);
+                const tables = await adapter.getTables();
                 return withCors(Response.json({ tables }));
             } catch (error: any) {
                 return withCors(Response.json({ error: error.message }, { status: 500 }));
@@ -74,8 +98,17 @@ const server = serve({
                     return withCors(Response.json({ error: 'table parameter required' }, { status: 400 }));
                 }
 
-                const data = getTableData({ db, tableName: table, limit, offset });
-                return withCors(Response.json(data));
+                const [columns, result, totalRows] = await Promise.all([
+                    adapter.getColumns(table),
+                    adapter.executeQuery(`SELECT * FROM ${table} LIMIT ${limit} OFFSET ${offset}`),
+                    adapter.getTotalRows(table)
+                ]);
+
+                return withCors(Response.json({
+                    columns,
+                    rows: result.rows,
+                    totalRows
+                }));
             } catch (error: any) {
                 return withCors(Response.json({ error: error.message }, { status: 500 }));
             }

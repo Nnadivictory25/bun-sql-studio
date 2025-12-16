@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useDeferredValue, useRef } from 'react';
 import { useStore } from '@tanstack/react-store';
 import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -10,22 +10,50 @@ type Row = Record<string, unknown>;
 
 export function TableView() {
 	const currentTable = useStore(store, (s) => s.currentTable);
+
+	// Defer table changes - lets sidebar update instantly while table catches up
+	const deferredTable = useDeferredValue(currentTable);
+
+	// Track previous table to detect changes synchronously (no useEffect)
+	const prevTableRef = useRef(deferredTable);
+	const tableChanged = prevTableRef.current !== deferredTable;
+
+	// Update ref for next render
+	if (tableChanged) {
+		prevTableRef.current = deferredTable;
+	}
+
 	// State for pagination: limit (pageSize) and offset
 	const [paginationState, setPaginationState] = useState({
 		pageIndex: 0,
-		pageSize: 100, // Default limit
+		pageSize: 50,
 	});
 
-	const offset = paginationState.pageIndex * paginationState.pageSize;
+	// Reset pageIndex synchronously when table changes - no useEffect, no double fetch
+	const effectivePageIndex = tableChanged ? 0 : paginationState.pageIndex;
+
+	// Also update the actual state so pagination controls show correct page
+	if (tableChanged && paginationState.pageIndex !== 0) {
+		setPaginationState((prev) => ({ ...prev, pageIndex: 0 }));
+	}
+
+	const offset = effectivePageIndex * paginationState.pageSize;
 	const limit = paginationState.pageSize;
 
-	const { data, isLoading, error } = useQuery(
+	// Use DEFERRED table for query - sidebar updates instantly, table follows
+	const { data, isLoading, isFetching, error } = useQuery(
 		tableDataQueryOptions({
-			table: currentTable!,
+			table: deferredTable!,
 			limit,
 			offset,
 		})
 	);
+
+	// Show blur when:
+	// 1. Table is switching (currentTable !== deferredTable)
+	// 2. OR fetching new page data
+	const isTableSwitching = currentTable !== deferredTable;
+	const showTableBlur = isTableSwitching || (isFetching && !isLoading);
 
 	const columns = React.useMemo<ColumnDef<Row>[]>(() => {
 		if (!data?.columns) return [];
@@ -55,12 +83,20 @@ export function TableView() {
 		);
 	}
 
-	if (isLoading)
+	// Only show full loading screen when there's NO data at all (first ever load)
+	if (isLoading && !data)
 		return (
-			<div className='h-full flex items-center justify-center text-slate-500'>
-				Loading...
+			<div className='h-full flex flex-col items-center justify-center p-8 space-y-4'>
+				<span className='loading loading-spinner loading-lg text-indigo-400'></span>
+				<div className='text-center'>
+					<p className='text-slate-300 font-medium'>Loading table data...</p>
+					<p className='text-slate-500 text-sm'>
+						Fetching {currentTable} records
+					</p>
+				</div>
 			</div>
 		);
+
 	if (error)
 		return (
 			<div className='p-4 text-red-400'>Error: {(error as Error).message}</div>
@@ -73,7 +109,8 @@ export function TableView() {
 			totalRows={data?.totalRows}
 			limit={limit}
 			onPaginationChange={handlePaginationChange}
-			pagination={paginationState}
+			pagination={{ ...paginationState, pageIndex: effectivePageIndex }}
+			isFetching={showTableBlur}
 		/>
 	);
 }

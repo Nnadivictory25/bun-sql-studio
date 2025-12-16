@@ -33,6 +33,11 @@ echo "⬆️  Bumping version..."
 npm version patch
 echo "✅ Version bumped"
 
+# Push changes and tags
+echo "📤 Pushing to remote..."
+git push && git push --tags
+echo "✅ Pushed to remote"
+
 # Build
 echo "🔨 Building package..."
 ./scripts/build.sh

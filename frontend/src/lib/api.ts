@@ -8,6 +8,9 @@ export const api = {
   getSchema: (): Promise<SchemaResponse> =>
     fetch(`${ENDPOINT}/schema`).then(res => res.json()),
 
+  getMeta: (): Promise<{ dialect: string; databaseName: string }> =>
+    fetch(`${ENDPOINT}/meta`).then(res => res.json()),
+
   getTableData: async ({
     table,
     limit,

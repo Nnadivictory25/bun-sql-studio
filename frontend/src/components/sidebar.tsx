@@ -1,11 +1,14 @@
+import { useTransition } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { tablesQueryOptions } from '../lib/query-options';
-import { Database, Table as TableIcon, Settings, Code2 } from 'lucide-react';
+import { tablesQueryOptions, metaQueryOptions } from '../lib/query-options';
+import { Database, Table as TableIcon, Code2, Loader2 } from 'lucide-react';
 import { useStore } from '@tanstack/react-store';
 import { store } from '../lib/store';
 
 export const Sidebar = () => {
+	const [isPending, startTransition] = useTransition();
 	const { data, isLoading, error } = useQuery(tablesQueryOptions);
+	const { data: meta } = useQuery(metaQueryOptions);
 	const selectedTable = useStore(store, (state) => state.currentTable);
 	const tables = data?.tables || [];
 
@@ -19,11 +22,14 @@ export const Sidebar = () => {
 	}
 
 	function handleTableSelect(tableName: string) {
-		store.setState((state) => ({
-			...state,
-			currentTable: tableName,
-			// We might want to switch view here if we had view state
-		}));
+		// Use startTransition to make this non-blocking
+		// The sidebar updates immediately, data fetching happens in background
+		startTransition(() => {
+			store.setState((state) => ({
+				...state,
+				currentTable: tableName,
+			}));
+		});
 	}
 
 	// Placeholder for view switching if we implement it fully later
@@ -93,14 +99,22 @@ export const Sidebar = () => {
 										: 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
 								}`}>
 								<div className='flex items-center space-x-3 truncate'>
-									<TableIcon
-										size={16}
-										className={
-											selectedTable === table.name
-												? 'text-indigo-400'
-												: 'text-slate-600 group-hover:text-slate-400'
-										}
-									/>
+									{/* Show spinner when loading this table's data */}
+									{isPending && selectedTable === table.name ? (
+										<Loader2
+											size={16}
+											className='text-indigo-400 animate-spin'
+										/>
+									) : (
+										<TableIcon
+											size={16}
+											className={
+												selectedTable === table.name
+													? 'text-indigo-400'
+													: 'text-slate-600 group-hover:text-slate-400'
+											}
+										/>
+									)}
 									<span className='truncate'>{table.name}</span>
 								</div>
 							</button>
@@ -111,15 +125,21 @@ export const Sidebar = () => {
 
 			{/* Connection Info / Footer */}
 			<div className='p-4 border-t border-slate-800 bg-slate-950/50 shrink-0'>
-				<div className='flex items-center space-x-3 text-xs text-slate-500 mb-3'>
+				<div className='flex items-center space-x-3 text-xs text-slate-500'>
 					<div className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse'></div>
-					<span>Connected: Local DB</span>
+					<span>
+						Connected:{' '}
+						<span className='font-bold'>
+							{Capitalize(meta?.databaseName || 'Loading...')}
+						</span>{' '}
+						({Capitalize(meta?.dialect || 'Unknown')})
+					</span>
 				</div>
-				<button className='flex items-center space-x-2 text-slate-400 hover:text-slate-200 transition-colors w-full px-2 py-1.5 rounded hover:bg-slate-900 cursor-pointer'>
-					<Settings size={16} />
-					<span className='text-xs'>Settings</span>
-				</button>
 			</div>
 		</div>
 	);
 };
+
+function Capitalize(str: string) {
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}

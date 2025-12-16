@@ -1,72 +1,121 @@
-# Bun SQL Studio
+# Bun SQL Studio v1.0 🎉
 
-A modern SQL database interface specifically built for Bun runtime. Browse SQLite tables, run queries, and inspect JSON data using Bun's native SQLite driver for maximum performance.
+**Modern database IDE supporting SQLite, PostgreSQL, and MySQL**
+
+A professional SQL database interface built for Bun runtime. Browse tables, run queries, and inspect data across multiple database types with zero configuration.
 
 ## Why Bun SQL Studio?
 
-Setting up a database interface on a fresh server or VPS can be frustrating. Traditional tools like BetterSQLite require Python dependencies, complex installations, and system-level changes. Bun SQL Studio eliminates this hassle:
+Bun SQL Studio provides a modern, professional database interface that works across SQLite, PostgreSQL, and MySQL. Unlike traditional tools that require complex setups and dependencies, Bun SQL Studio offers:
 
-- **Zero Dependencies**: No Python, no system libraries, no compilation headaches
-- **One-Command Setup**: `bunx bun-sql-studio` works instantly on any Bun-enabled environment
-- **Built for Modern Runtimes**: Leverages Bun's native SQLite support for lightning-fast performance
-- **Server-Ready**: Perfect for development, staging, and production environments
+- **Multi-Database Support**: Connect to SQLite files, PostgreSQL servers, or MySQL databases
+- **Zero Configuration**: Automatic detection of Drizzle configs for instant setup
+- **Modern Architecture**: Built with Bun runtime for maximum performance
+- **Professional UX**: Table browsing, SQL editing, JSON viewing, and more
+- **Production Ready**: Suitable for development, staging, and production environments
 
-Stop wrestling with database tools. Get a professional SQLite interface in seconds.
+Stop wrestling with database tools. Get a professional multi-database IDE in seconds.
 
 ## Quick Start
 
-**One command to get started:**
-
+### SQLite (Zero Config)
 ```bash
 bunx bun-sql-studio
 ```
+That's it! The studio detects your Drizzle config or creates a default SQLite database.
 
-That's it! The studio detects your Drizzle config or uses defaults, and starts at `http://localhost:4987`.
+### PostgreSQL
+```bash
+# Using Drizzle config (auto-detected)
+export DATABASE_URL="postgresql://user:pass@localhost:5432/dbname"
+bunx bun-sql-studio
 
-### Optional: Custom Configuration
-
-Create `bun-sql-studio.json` for custom settings:
-
-```json
-{
-	"dialect": "sqlite",
-	"dbUrl": "./database.sqlite",
-	"port": 4987
-}
+# Or create bun-sql-studio.json
+echo '{"dialect": "postgresql", "dbUrl": "postgresql://user:pass@localhost:5432/dbname"}' > bun-sql-studio.json
+bunx bun-sql-studio
 ```
+
+### MySQL
+```bash
+# Using Drizzle config (auto-detected)
+export DATABASE_URL="mysql://user:pass@localhost:3306/dbname"
+bunx bun-sql-studio
+
+# Or create bun-sql-studio.json
+echo '{"dialect": "mysql", "dbUrl": "mysql://user:pass@localhost:3306/dbname"}' > bun-sql-studio.json
+bunx bun-sql-studio
+```
+
+The studio starts at `http://localhost:4987` for all database types.
 
 ### Configuration
 
 The studio automatically detects your database settings from:
 
 - **Drizzle config** (`drizzle.config.ts` or `drizzle.config.js`) - zero-config for existing projects
-- **Studio config** (`bun-sql-studio.json`) - create this only if no Drizzle config exists
+- **Studio config** (`bun-sql-studio.json`) - create this for manual configuration
 
 ```json
 {
-	"dialect": "sqlite",
-	"dbUrl": "./database.sqlite",
+	"dialect": "sqlite", // or "postgresql" or "mysql"
+	"dbUrl": "./database.sqlite", // or connection string
 	"port": 4987
 }
 ```
 
 ## Features
 
-- **Zero-Config**: Auto-detects Drizzle config for instant setup
-- **Table Browser**: View all tables with column information
-- **Query Runner**: Execute SELECT queries with results table
-- **JSON Viewer**: Inspect JSON columns with expandable modal
-- **Column Resizing**: Drag to resize table columns
-- **Pagination**: Navigate large datasets efficiently
-- **Responsive Design**: Works on desktop and mobile
+- **Multi-Database Support**: SQLite, PostgreSQL, and MySQL
+- **Zero-Config Setup**: Auto-detects Drizzle config for instant database connection
+- **Professional Table Browser**: View all tables with column information and data types
+- **Advanced Query Editor**: Execute SQL queries with syntax highlighting and results table
+- **JSON Data Viewer**: Inspect JSON columns with expandable modal interface
+- **Row Selection**: Select individual rows or bulk operations with checkboxes
+- **Column Resizing**: Drag to resize table columns with smooth performance
+- **Smart Pagination**: Navigate large datasets with configurable page sizes
+- **Responsive Design**: Professional UI that works on desktop and mobile
+
+## Supported Databases
+
+| Database | Status | Features |
+|----------|--------|----------|
+| SQLite | ✅ Full | Tables, columns, queries, local .db files |
+| PostgreSQL | ✅ Full | information_schema, full SQL, production databases |
+| MySQL | ✅ Full | SHOW TABLES, DESCRIBE, full SQL, enterprise databases |
 
 ## Configuration
 
-| Option    | Type   | Default  | Description                         |
-| --------- | ------ | -------- | ----------------------------------- |
-| `dialect` | string | "sqlite" | Database type (sqlite only for now) |
-| `dbUrl`   | string | required | Path to SQLite database file        |
-| `port`    | number | 4987     | Server port                         |
+| Option    | Type   | Default  | Description |
+| --------- | ------ | -------- | ----------- |
+| `dialect` | string | "sqlite" | Database type: "sqlite", "postgresql", or "mysql" |
+| `dbUrl`   | string | required | Database connection: file path for SQLite, connection string for others |
+| `port`    | number | 4987     | Server port |
+
+### Database Connection Examples
+
+**SQLite:**
+```json
+{
+  "dialect": "sqlite",
+  "dbUrl": "./database.sqlite"
+}
+```
+
+**PostgreSQL:**
+```json
+{
+  "dialect": "postgresql",
+  "dbUrl": "postgresql://user:password@localhost:5432/database"
+}
+```
+
+**MySQL:**
+```json
+{
+  "dialect": "mysql",
+  "dbUrl": "mysql://user:password@localhost:3306/database"
+}
+```
 
 ## Requirements
 

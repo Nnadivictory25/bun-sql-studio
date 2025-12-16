@@ -69,6 +69,7 @@ async function loadConfig() {
 const config = await loadConfig();
 const { dialect, dbUrl, port } = config;
 
+
 // Environment
 process.env.DIALECT = dialect;
 process.env.DB_URL = dbUrl;

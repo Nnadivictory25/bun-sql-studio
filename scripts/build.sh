@@ -28,7 +28,6 @@ bun build "$PROJECT_ROOT/server/server.ts" \
 echo "🚀 Building CLI..."
 bun build "$PROJECT_ROOT/cli.ts" \
   --outdir "$PROJECT_ROOT/dist" \
-  --target bun \
-  --minify
+  --target bun
 
 echo "✅ Build complete (minified)"

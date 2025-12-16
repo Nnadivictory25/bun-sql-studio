@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Database } from 'lucide-react';
 import { useStore } from '@tanstack/react-store';
 import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -11,8 +10,14 @@ type Row = Record<string, unknown>;
 
 export function TableView() {
 	const currentTable = useStore(store, (s) => s.currentTable);
-	const [offset, setOffset] = useState(0);
-	const limit = 100;
+	// State for pagination: limit (pageSize) and offset
+	const [paginationState, setPaginationState] = useState({
+		pageIndex: 0,
+		pageSize: 100, // Default limit
+	});
+
+	const offset = paginationState.pageIndex * paginationState.pageSize;
+	const limit = paginationState.pageSize;
 
 	const { data, isLoading, error } = useQuery(
 		tableDataQueryOptions({
@@ -28,7 +33,7 @@ export function TableView() {
 		return data.columns.map((col) => ({
 			accessorKey: col.name,
 			header: col.name,
-			size: 100,
+			size: 150,
 			minSize: 50,
 			maxSize: 500,
 			meta: {
@@ -38,31 +43,28 @@ export function TableView() {
 	}, [data?.columns]);
 
 	const handlePaginationChange = (updater: any) => {
-		// updater can be a function or value
-		// We need current pagination state to pass to function if needed?
-		// But DataTable manages state internally or via props?
-		// For Manual pagination, DataTable uses usage of `onPaginationChange` to allow manual control.
-		// But the state is usually managed by the table instance inside DataTable.
-		// To control it from parent, we need to pass `pagination` prop.
-		// Let's compute local pagination state from `offset`.
-		const pageIndex = Math.floor(offset / limit);
-
-		// Helper to resolve updater
-		const nextState =
-			typeof updater === 'function'
-				? updater({ pageIndex, pageSize: limit })
-				: updater;
-
-		setOffset(nextState.pageIndex * limit);
+		setPaginationState((old) => {
+			const nextState = typeof updater === 'function' ? updater(old) : updater;
+			return nextState;
+		});
 	};
 
 	if (!currentTable) {
-		return <div className='p-4'>Select a table from the sidebar</div>;
+		return (
+			<div className='p-4 text-slate-400'>Select a table from the sidebar</div>
+		);
 	}
 
-	if (isLoading) return <div className='skeleton h-64 w-full'></div>;
+	if (isLoading)
+		return (
+			<div className='h-full flex items-center justify-center text-slate-500'>
+				Loading...
+			</div>
+		);
 	if (error)
-		return <div className='alert alert-error'>{(error as Error).message}</div>;
+		return (
+			<div className='p-4 text-red-400'>Error: {(error as Error).message}</div>
+		);
 
 	return (
 		<DataTable
@@ -71,15 +73,7 @@ export function TableView() {
 			totalRows={data?.totalRows}
 			limit={limit}
 			onPaginationChange={handlePaginationChange}
-			pagination={{ pageIndex: Math.floor(offset / limit), pageSize: limit }}
-			headerSlot={
-				<label
-					htmlFor='sql-studio-drawer'
-					className='btn btn-primary btn-sm gap-2 drawer-button'>
-					<Database className='size-4' />
-					SQL Query Studio
-				</label>
-			}
+			pagination={paginationState}
 		/>
 	);
 }

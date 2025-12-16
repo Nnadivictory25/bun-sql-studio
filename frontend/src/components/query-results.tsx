@@ -1,13 +1,18 @@
+import { memo } from 'react';
 import { DataTable } from './data-table';
+import { CircleAlert } from 'lucide-react';
 
 interface QueryResultsProps {
-	data: any[] | null;
+	data: Record<string, any>[] | null;
 	isLoading: boolean;
 	error: Error | null;
-	executionTime?: number;
 }
 
-export const QueryResults = ({ data, isLoading, error }: QueryResultsProps) => {
+export const QueryResults = memo(function QueryResults({
+	data,
+	isLoading,
+	error,
+}: QueryResultsProps) {
 	if (isLoading) {
 		return (
 			<div className='h-full flex items-center justify-center p-8'>
@@ -18,10 +23,12 @@ export const QueryResults = ({ data, isLoading, error }: QueryResultsProps) => {
 
 	if (error) {
 		return (
-			<div className='h-full p-4'>
-				<div className='alert alert-error'>
-					<span>Error executing query: {error.message}</span>
-				</div>
+			<div className='h-full flex flex-col items-center justify-center bg-slate-950 text-rose-500 p-4 border border-slate-800 rounded-lg'>
+				<CircleAlert size={32} className='mb-2' />
+				<h3 className='font-bold mb-1'>Query Error</h3>
+				<p className='text-sm text-center font-mono bg-rose-950/30 p-2 rounded border border-rose-900/50'>
+					{error.message}
+				</p>
 			</div>
 		);
 	}
@@ -45,5 +52,12 @@ export const QueryResults = ({ data, isLoading, error }: QueryResultsProps) => {
 		);
 	}
 
-	return <DataTable data={data} isLoading={isLoading} />;
-};
+	return (
+		<DataTable
+			data={data || []}
+			isLoading={isLoading}
+			headerSlot={null}
+			limit={50}
+		/>
+	);
+});

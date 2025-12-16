@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useStore } from '@tanstack/react-store';
 import { useQuery } from '@tanstack/react-query';
 import { store } from '../lib/store';
@@ -8,11 +8,13 @@ import { QueryHistory } from './query-history';
 import { QueryResults } from './query-results';
 
 export const SqlStudio = () => {
-	// Global store state
-	const { currentQuery, queryHistory } = useStore(store, (state) => state);
+	// Global store state - granular selectors
+	const currentQuery = useStore(store, (state) => state.currentQuery);
+	const queryHistory = useStore(store, (state) => state.queryHistory);
 
 	// Local state for execution
 	const [executionSql, setExecutionSql] = useState<string | null>(null);
+	const lastSavedSql = useRef<string | null>(null);
 
 	// Fetch schema for autocomplete
 	const { data: schemaData } = useQuery(schemaQueryOptions);
@@ -42,43 +44,51 @@ export const SqlStudio = () => {
 		retry: false,
 	});
 
-	const handleQueryChange = (val: string) => {
-		store.setState((state) => ({ ...state, currentQuery: val }));
-	};
+	// Save to history only on success
+	useEffect(() => {
+		if (!isLoading && !error && queryData && executionSql) {
+			if (executionSql !== lastSavedSql.current) {
+				lastSavedSql.current = executionSql;
+				store.setState((state) => {
+					const sql = executionSql;
+					if (state.queryHistory[0] === sql) return state;
+					const newHistory = [
+						sql,
+						...state.queryHistory.filter((h) => h !== sql),
+					].slice(0, 50);
+					return { ...state, queryHistory: newHistory };
+				});
+			}
+		}
+	}, [isLoading, error, queryData, executionSql]);
 
-	const handleRunSmart = () => {
-		const sql = currentQuery?.trim();
+	const handleQueryChange = useCallback((val: string) => {
+		store.setState((state) => ({ ...state, currentQuery: val }));
+	}, []);
+
+	const handleRunSmart = useCallback(() => {
+		const sql = store.state.currentQuery?.trim();
 		if (!sql) return;
 
 		if (executionSql === sql) {
+			// Allow re-saving if run explicitly again
+			lastSavedSql.current = null;
 			refetch();
 		} else {
 			setExecutionSql(sql);
 		}
+	}, [executionSql, refetch]);
 
-		store.setState((state) => {
-			/* ... same history logic ... */
-			const newHistory = [
-				sql,
-				...state.queryHistory.filter((h) => h !== sql),
-			].slice(0, 50);
-			return {
-				...state,
-				queryHistory: newHistory,
-			};
-		});
-	};
-
-	const handleHistorySelect = (sql: string) => {
+	const handleHistorySelect = useCallback((sql: string) => {
 		store.setState((state) => ({ ...state, currentQuery: sql }));
-	};
+	}, []);
 
-	const handleHistoryDelete = (sql: string) => {
+	const handleHistoryDelete = useCallback((sql: string) => {
 		store.setState((state) => ({
 			...state,
 			queryHistory: state.queryHistory.filter((h) => h !== sql),
 		}));
-	};
+	}, []);
 
 	return (
 		<div className='h-full flex flex-col gap-2 overflow-hidden'>

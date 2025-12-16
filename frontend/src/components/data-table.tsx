@@ -371,7 +371,7 @@ export const DataTable = ({
 									<th
 										key={header.id}
 										style={{ width: header.getSize() }}
-										className='px-4 py-3 font-medium text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800 whitespace-nowrap group cursor-pointer hover:bg-slate-800 transition-colors relative'>
+										className='px-4 py-3 font-medium text-slate-400 text-xs uppercase tracking-wider border-b border-r border-slate-800 last:border-r-0 whitespace-nowrap group cursor-pointer hover:bg-slate-800 transition-colors relative bg-slate-900'>
 										<div className='flex items-center space-x-1'>
 											{flexRender(
 												header.column.columnDef.header,

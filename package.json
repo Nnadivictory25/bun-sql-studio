@@ -39,5 +39,8 @@
     "bugs": {
         "url": "https://github.com/Nnadivictory25/bun-sql-studio/issues"
     },
-    "homepage": "https://github.com/Nnadivictory25/bun-sql-studio#readme"
+    "homepage": "https://github.com/Nnadivictory25/bun-sql-studio#readme",
+    "dependencies": {
+        "bun-sql-studio": "^1.0.2"
+    }
 }

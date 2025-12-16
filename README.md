@@ -1,141 +1,162 @@
 # Bun SQL Studio v1.0 🎉
 
-**Modern database IDE supporting SQLite, PostgreSQL, and MySQL**
+**A modern, zero-config SQL database IDE for Bun**
 
-A professional SQL database interface built for Bun runtime. Browse tables, run queries, and inspect data across multiple database types with zero configuration.
+Bun SQL Studio is a fast, professional database interface for **SQLite, PostgreSQL, and MySQL**. It lets you browse tables, run queries, and inspect data with minimal setup—designed for developers who want tooling that _just works_.
+
+---
 
 ## Why Bun SQL Studio?
 
-Bun SQL Studio provides a modern, professional database interface that works across SQLite, PostgreSQL, and MySQL. Unlike traditional tools that require complex setups and dependencies, Bun SQL Studio offers:
+Most database tools fall into two extremes:
 
-- **Multi-Database Support**: Connect to SQLite files, PostgreSQL servers, or MySQL databases
-- **Zero Configuration**: Automatic detection of Drizzle configs for instant setup
-- **Modern Architecture**: Built with Bun runtime for maximum performance
-- **Professional UX**: Table browsing, SQL editing, JSON viewing, and more
-- **Production Ready**: Suitable for development, staging, and production environments
+- **Heavy GUI apps** that are slow, bloated, and painful to install
+- **CLI-based tools** that are powerful but hard to navigate and visualize
 
-Stop wrestling with database tools. Get a professional multi-database IDE in seconds.
+On top of that, many “simple” database UIs quietly depend on **extra system binaries**.
+
+### The problems Bun SQL Studio solves
+
+- **CLI fatigue** – remembering commands, flags, and parsing raw output
+- **Poor data visualization** – tables, relations, and JSON are hard to inspect
+- **Hidden dependencies** – tools that require Python, Java, system SQLite, or native DB clients
+- **Context switching** – bouncing between terminal, editor, and browser
+
+---
+
+## What makes Bun SQL Studio different
+
+- **Single runtime** – requires only **Bun**
+- **No extra binaries** – no Python, Java, `sqlite3`, `psql`, or `mysql` clients
+- **Visual-first UI** – inspect tables, JSON, and query results with ease
+- **Instant setup** – auto-detects Drizzle configs or uses a single config file
+- **Consistent experience** – same workflow for SQLite, PostgreSQL, and MySQL
+
+If Bun runs, **Bun SQL Studio runs**.
+
+---
 
 ## Quick Start
 
-### SQLite (Zero Config)
+Bun SQL Studio uses **one configuration file** for all databases.
+
+Create `bun-sql-studio.json` in your project root and define **either** a SQLite file path **or** a database connection string.
+
 ```bash
 bunx bun-sql-studio
 ```
-That's it! The studio detects your Drizzle config or creates a default SQLite database.
 
-### PostgreSQL
-```bash
-# Using Drizzle config (auto-detected)
-export DATABASE_URL="postgresql://user:pass@localhost:5432/dbname"
-bunx bun-sql-studio
+The studio starts at:
 
-# Or create bun-sql-studio.json
-echo '{"dialect": "postgresql", "dbUrl": "postgresql://user:pass@localhost:5432/dbname"}' > bun-sql-studio.json
-bunx bun-sql-studio
+```
+http://localhost:4987
 ```
 
-### MySQL
-```bash
-# Using Drizzle config (auto-detected)
-export DATABASE_URL="mysql://user:pass@localhost:3306/dbname"
-bunx bun-sql-studio
+---
 
-# Or create bun-sql-studio.json
-echo '{"dialect": "mysql", "dbUrl": "mysql://user:pass@localhost:3306/dbname"}' > bun-sql-studio.json
-bunx bun-sql-studio
-```
+## Configuration
 
-The studio starts at `http://localhost:4987` for all database types.
-
-### Configuration
-
-The studio automatically detects your database settings from:
-
-- **Drizzle config** (`drizzle.config.ts` or `drizzle.config.js`) - zero-config for existing projects
-- **Studio config** (`bun-sql-studio.json`) - create this for manual configuration
+### `bun-sql-studio.json`
 
 ```json
 {
-	"dialect": "sqlite", // or "postgresql" or "mysql"
-	"dbUrl": "./database.sqlite", // or connection string
+	"dialect": "sqlite",
+	"dbUrl": "./database.sqlite",
 	"port": 4987
 }
 ```
 
+- Use a **file path** for SQLite
+- Use a **connection string** for PostgreSQL or MySQL
+- If a **Drizzle config** is present, it will be auto-detected and used instead
+
+---
+
+### Database examples
+
+**SQLite**
+
+```json
+{
+	"dialect": "sqlite",
+	"dbUrl": "./database.sqlite"
+}
+```
+
+**PostgreSQL**
+
+```json
+{
+	"dialect": "postgresql",
+	"dbUrl": "postgresql://user:password@localhost:5432/database"
+}
+```
+
+**MySQL**
+
+```json
+{
+	"dialect": "mysql",
+	"dbUrl": "mysql://user:password@localhost:3306/database"
+}
+```
+
+---
+
 ## Features
 
-- **Multi-Database Support**: SQLite, PostgreSQL, and MySQL
-- **Zero-Config Setup**: Auto-detects Drizzle config for instant database connection
-- **Professional Table Browser**: View all tables with column information and data types
-- **Advanced Query Editor**: Execute SQL queries with syntax highlighting and results table
-- **JSON Data Viewer**: Inspect JSON columns with expandable modal interface
-- **Row Selection**: Select individual rows or bulk operations with checkboxes
-- **Column Resizing**: Drag to resize table columns with smooth performance
-- **Smart Pagination**: Navigate large datasets with configurable page sizes
-- **Responsive Design**: Professional UI that works on desktop and mobile
+- **Visual Table Browser** – Explore tables and columns without writing SQL
+- **SQL Query Editor** – Execute queries with readable, paginated results
+- **JSON Viewer** – Inspect nested JSON in a clean modal UI
+- **Column Resizing** – Smooth drag-to-resize interactions
+- **Pagination** – Efficient browsing of large datasets
+- **Cross-Database Support** – One UI for all supported databases
+
+---
 
 ## Supported Databases
 
-| Database | Status | Features |
-|----------|--------|----------|
-| SQLite | ✅ Full | Tables, columns, queries, local .db files |
-| PostgreSQL | ✅ Full | information_schema, full SQL, production databases |
-| MySQL | ✅ Full | SHOW TABLES, DESCRIBE, full SQL, enterprise databases |
+| Database   | Status  | Notes                               |
+| ---------- | ------- | ----------------------------------- |
+| SQLite     | ✅ Full | No system SQLite or Python required |
+| PostgreSQL | ✅ Full | No `psql` binary needed             |
+| MySQL      | ✅ Full | No `mysql` client required          |
 
-## Configuration
+---
 
-| Option    | Type   | Default  | Description |
-| --------- | ------ | -------- | ----------- |
-| `dialect` | string | "sqlite" | Database type: "sqlite", "postgresql", or "mysql" |
-| `dbUrl`   | string | required | Database connection: file path for SQLite, connection string for others |
-| `port`    | number | 4987     | Server port |
+## Configuration Options
 
-### Database Connection Examples
+| Option    | Type   | Default | Description                              |
+| --------- | ------ | ------- | ---------------------------------------- |
+| `dialect` | string | sqlite  | `sqlite`, `postgresql`, or `mysql`       |
+| `dbUrl`   | string | —       | SQLite file path or DB connection string |
+| `port`    | number | 4987    | Server port                              |
 
-**SQLite:**
-```json
-{
-  "dialect": "sqlite",
-  "dbUrl": "./database.sqlite"
-}
-```
-
-**PostgreSQL:**
-```json
-{
-  "dialect": "postgresql",
-  "dbUrl": "postgresql://user:password@localhost:5432/database"
-}
-```
-
-**MySQL:**
-```json
-{
-  "dialect": "mysql",
-  "dbUrl": "mysql://user:password@localhost:3306/database"
-}
-```
+---
 
 ## Requirements
 
-- Bun 👍
+- **Bun** (nothing else)
+
+---
 
 ## Troubleshooting
 
-**"bun-sql-studio.json not found"**
+**Studio doesn’t start**
 
-- Ensure config file exists in current directory
-- Check file name and JSON syntax
+- Ensure `bun-sql-studio.json` exists and contains valid JSON
+- Confirm the database path or connection string is correct
 
 **Database connection errors**
 
-- Verify `dbUrl` path is correct
-- Ensure database file exists and is readable
+- Check credentials and permissions
+- Ensure SQLite files exist and are readable
 
 **Port already in use**
 
-- Change `port` in config or free the port
+- Change the `port` value in the config file
+
+---
 
 ## License
 

@@ -5,6 +5,8 @@ import {
 	getPaginationRowModel,
 	flexRender,
 	type ColumnDef,
+	type OnChangeFn,
+	type PaginationState,
 } from '@tanstack/react-table';
 import {
 	FileJson,
@@ -145,7 +147,7 @@ interface DataTableProps {
 	isFetching?: boolean; // For blur overlay during pagination/table switch
 
 	headerSlot?: React.ReactNode;
-	onPaginationChange?: (updater: any) => void;
+	onPaginationChange?: OnChangeFn<PaginationState>;
 	pagination?: { pageIndex: number; pageSize: number };
 }
 
@@ -223,6 +225,7 @@ export const DataTable = ({
 		return [selectionColumn, ...dataColumns];
 	}, [customColumns, data]);
 
+	// eslint-disable-next-line react-hooks/incompatible-library
 	const table = useReactTable({
 		data: data ?? [],
 		columns,
@@ -415,8 +418,8 @@ export const DataTable = ({
 			</div>
 
 			{/* JSON PREVIEW MODAL */}
-			<dialog id='json_preview_modal' className='modal !duration-100'>
-				<div className='modal-box max-w-4xl bg-slate-950 border border-slate-800 text-slate-300 !duration-100'>
+			<dialog id='json_preview_modal' className='modal duration-100'>
+				<div className='modal-box max-w-4xl bg-slate-950 border border-slate-800 text-slate-300 duration-100'>
 					<div className='flex justify-between items-center mb-4'>
 						<h3 className='font-bold text-lg text-slate-100'>
 							{jsonModalData?.title}
@@ -449,7 +452,7 @@ export const DataTable = ({
 						</form>
 					</div>
 				</div>
-				<form method='dialog' className='modal-backdrop !duration-100'>
+				<form method='dialog' className='modal-backdrop duration-100'>
 					<button>close</button>
 				</form>
 			</dialog>

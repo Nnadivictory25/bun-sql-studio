@@ -4,12 +4,19 @@ import { Play } from 'lucide-react';
 import { useMemo, memo } from 'react';
 import { customDarkTheme } from './codemirror-theme';
 
+interface SchemaSuggestion {
+	label: string;
+	type: string;
+	detail: string;
+	boost: number;
+}
+
 interface QueryEditorProps {
 	value: string;
 	onChange: (value: string) => void;
 	onRun: () => void;
 	isRunning?: boolean;
-	schema?: Record<string, any[]>;
+	schema?: Record<string, SchemaSuggestion[]>;
 }
 
 export const QueryEditor = memo(function QueryEditor({

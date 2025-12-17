@@ -1,7 +1,7 @@
 import { serve } from "bun";
 import path from "path";
-import { getSchema, getTables, getTableData, withCors } from "./utils";
 import { createAdapter, type DatabaseDialect } from "./adapters/index";
+import { withCors } from "./utils";
 
 // Paths
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
@@ -36,9 +36,9 @@ const server = serve({
         if (url.pathname === '/meta') {
             try {
                 const databaseName = await adapter.getDatabaseName();
-                return withCors(Response.json({ 
-                    dialect: DIALECT, 
-                    databaseName 
+                return withCors(Response.json({
+                    dialect: DIALECT,
+                    databaseName
                 }));
             } catch (error: any) {
                 console.error("Error getting metadata", error);

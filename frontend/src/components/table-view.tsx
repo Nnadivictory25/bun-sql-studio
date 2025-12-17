@@ -1,4 +1,4 @@
-import React, { useState, useDeferredValue, useRef } from 'react';
+import React, { useState, useDeferredValue } from 'react';
 import { useStore } from '@tanstack/react-store';
 import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -14,31 +14,24 @@ export function TableView() {
 	// Defer table changes - lets sidebar update instantly while table catches up
 	const deferredTable = useDeferredValue(currentTable);
 
-	// Track previous table to detect changes synchronously (no useEffect)
-	const prevTableRef = useRef(deferredTable);
-	const tableChanged = prevTableRef.current !== deferredTable;
-
-	// Update ref for next render
-	if (tableChanged) {
-		prevTableRef.current = deferredTable;
-	}
-
 	// State for pagination: limit (pageSize) and offset
 	const [paginationState, setPaginationState] = useState({
 		pageIndex: 0,
 		pageSize: 50,
 	});
 
-	// Reset pageIndex synchronously when table changes - no useEffect, no double fetch
-	const effectivePageIndex = tableChanged ? 0 : paginationState.pageIndex;
-
-	// Also update the actual state so pagination controls show correct page
-	if (tableChanged && paginationState.pageIndex !== 0) {
-		setPaginationState((prev) => ({ ...prev, pageIndex: 0 }));
-	}
-
-	const offset = effectivePageIndex * paginationState.pageSize;
+	const offset = paginationState.pageIndex * paginationState.pageSize;
 	const limit = paginationState.pageSize;
+
+	// Reset pagination when table changes - proper React approach
+	// Using a key-based component would be cleaner, but for now we'll use this approach
+	const shouldResetPagination = React.useRef(false);
+	React.useLayoutEffect(() => {
+		if (shouldResetPagination.current) {
+			setPaginationState((prev) => ({ ...prev, pageIndex: 0 }));
+		}
+		shouldResetPagination.current = true;
+	}, [currentTable]);
 
 	// Use DEFERRED table for query - sidebar updates instantly, table follows
 	const { data, isLoading, isFetching, error } = useQuery(
@@ -56,9 +49,8 @@ export function TableView() {
 	const showTableBlur = isTableSwitching || (isFetching && !isLoading);
 
 	const columns = React.useMemo<ColumnDef<Row>[]>(() => {
-		if (!data?.columns) return [];
-
-		return data.columns.map((col) => ({
+		const rawColumns = data?.columns ?? [];
+		return rawColumns.map((col) => ({
 			accessorKey: col.name,
 			header: col.name,
 			size: 150,
@@ -69,13 +61,6 @@ export function TableView() {
 			},
 		}));
 	}, [data?.columns]);
-
-	const handlePaginationChange = (updater: any) => {
-		setPaginationState((old) => {
-			const nextState = typeof updater === 'function' ? updater(old) : updater;
-			return nextState;
-		});
-	};
 
 	if (!currentTable) {
 		return (
@@ -104,12 +89,13 @@ export function TableView() {
 
 	return (
 		<DataTable
+			key={deferredTable}
 			data={(data?.rows ?? []) as Row[]}
 			columns={columns}
 			totalRows={data?.totalRows}
-			limit={limit}
-			onPaginationChange={handlePaginationChange}
-			pagination={{ ...paginationState, pageIndex: effectivePageIndex }}
+			limit={paginationState.pageSize}
+			pagination={paginationState}
+			onPaginationChange={setPaginationState}
 			isFetching={showTableBlur}
 		/>
 	);

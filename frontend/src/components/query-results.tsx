@@ -1,9 +1,9 @@
-import { memo } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { DataTable } from './data-table';
 import { CircleAlert } from 'lucide-react';
 
 interface QueryResultsProps {
-	data: Record<string, any>[] | null;
+	data: Record<string, unknown>[] | null;
 	isLoading: boolean;
 	error: Error | null;
 }
@@ -13,6 +13,21 @@ export const QueryResults = memo(function QueryResults({
 	isLoading,
 	error,
 }: QueryResultsProps) {
+	const [paginationState, setPaginationState] = useState({
+		pageIndex: 0,
+		pageSize: 50,
+	});
+
+	const slicedData = useMemo(() => {
+		if (!data) return [];
+		const start = paginationState.pageIndex * paginationState.pageSize;
+		return data.slice(start, start + paginationState.pageSize);
+	}, [data, paginationState.pageIndex, paginationState.pageSize]);
+
+	const queryVersion = useMemo(() => {
+		if (!data) return 'empty';
+		return `rows:${data.length}`;
+	}, [data]);
 	if (isLoading) {
 		return (
 			<div className='h-full flex items-center justify-center p-8'>
@@ -54,10 +69,14 @@ export const QueryResults = memo(function QueryResults({
 
 	return (
 		<DataTable
-			data={data || []}
+			key={queryVersion}
+			data={slicedData}
+			totalRows={data?.length}
+			limit={paginationState.pageSize}
+			pagination={paginationState}
+			onPaginationChange={setPaginationState}
 			isLoading={isLoading}
 			headerSlot={null}
-			limit={50}
 		/>
 	);
 });

@@ -19,9 +19,16 @@ export const SqlStudio = () => {
 	// Fetch schema for autocomplete
 	const { data: schemaData } = useQuery(schemaQueryOptions);
 
+	interface CodeMirrorSchemaSuggestion {
+	label: string;
+	type: string;
+	detail: string;
+	boost: number;
+}
+
 	const codeMirrorSchema = useMemo(() => {
 		if (!schemaData?.tables) return undefined;
-		const s: Record<string, any[]> = {};
+		const s: Record<string, CodeMirrorSchemaSuggestion[]> = {};
 		schemaData.tables.forEach((t) => {
 			s[t.name] = t.columns.map((c) => ({
 				label: c.name,
